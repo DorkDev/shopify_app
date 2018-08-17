@@ -66,17 +66,18 @@ module ShopifyApp
 
     def authenticate_at_top_level
       set_top_level_oauth_cookie
-      fullpage_redirect_to login_url(no_cookie_redirect: true)
+      fullpage_redirect_to login_url(top_level: true)
     end
 
     def authenticate_in_context?
       return true unless ShopifyApp.configuration.embedded_app?
+      return true if params[:top_level]
       session['shopify.top_level_oauth']
     end
 
     def redirect_for_cookie_access?
       return false unless ShopifyApp.configuration.embedded_app?
-      return false if params[:no_cookie_redirect]
+      return false if params[:top_level]
       return false if session['shopify.cookies_persist']
 
       true

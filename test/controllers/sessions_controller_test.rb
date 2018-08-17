@@ -24,26 +24,25 @@ module ShopifyApp
       session.delete('shopify.cookies_persist')
       shopify_domain = 'my-shop.myshopify.com'
       get :new, params: { shop: 'my-shop' }
-      assert_redirected_to_authentication(shopify_domain, '/enable_cookies?shop=my-shop.myshopify.com')
-    end
-
-    test '#new doesn\'t redirect to the enable_cookies page if specify param' do
-      session.delete('shopify.cookies_persist')
-      shopify_domain = 'my-shop.myshopify.com'
-      get :new, params: { shop: 'my-shop', no_cookie_redirect: true }
-      assert_redirected_to_authentication(shopify_domain)
+      assert_redirected_to_top_level(shopify_domain, '/enable_cookies?shop=my-shop.myshopify.com')
     end
 
     test '#new redirects to the top-level login if a valid shop param exists' do
       shopify_domain = 'my-shop.myshopify.com'
       get :new, params: { shop: 'my-shop' }
-      assert_redirected_to_authentication(shopify_domain)
+      assert_redirected_to_top_level(shopify_domain)
       assert_equal true, session['shopify.top_level_oauth']
     end
 
     test '#new sets the top_level_oauth cookie if a valid shop param exists' do
       get :new, params: { shop: 'my-shop' }
       assert_equal true, session['shopify.top_level_oauth']
+    end
+
+    test '#new redirects to the auth page if top_level param' do
+      session.delete('shopify.cookies_persist')
+      get :new, params: { shop: 'my-shop', top_level: true }
+      assert_redirected_to '/auth/shopify'
     end
 
     test "#new should authenticate the shop if a valid shop param exists non embedded" do
@@ -72,7 +71,7 @@ module ShopifyApp
       session[:shopify] = previously_logged_in_shop_id
       new_shop_domain = "new-shop.myshopify.com"
       get :new, params: { shop: new_shop_domain }
-      assert_redirected_to_authentication(new_shop_domain)
+      assert_redirected_to_top_level(new_shop_domain)
     end
 
     test "#new should render a full-page if the shop param doesn't exist" do
@@ -92,7 +91,7 @@ module ShopifyApp
       test "#create should authenticate the shop for the URL (#{good_url})" do
         shopify_domain = 'my-shop.myshopify.com'
         post :create, params: { shop: good_url }
-        assert_redirected_to_authentication(shopify_domain)
+        assert_redirected_to_top_level(shopify_domain)
       end
     end
 
@@ -101,7 +100,7 @@ module ShopifyApp
         ShopifyApp.configuration.myshopify_domain = 'myshopify.io'
         shopify_domain = 'my-shop.myshopify.io'
         post :create, params: { shop: good_url }
-        assert_redirected_to_authentication(shopify_domain)
+        assert_redirected_to_top_level(shopify_domain)
       end
     end
 
@@ -269,8 +268,8 @@ module ShopifyApp
       request.env['omniauth.params'] = { shop: 'shop.myshopify.com' } if request
     end
 
-    def assert_redirected_to_authentication(shop_domain, expected_url = nil)
-      expected_url ||= "/login?no_cookie_redirect=true\\u0026shop=#{shop_domain}"
+    def assert_redirected_to_top_level(shop_domain, expected_url = nil)
+      expected_url ||= "/login?shop=#{shop_domain}\\u0026top_level=true"
 
       assert_template 'shared/redirect'
       assert_select '[id=redirection-target]', 1 do |elements|

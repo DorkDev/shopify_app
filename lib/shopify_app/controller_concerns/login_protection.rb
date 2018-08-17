@@ -57,12 +57,12 @@ module ShopifyApp
       session[:shopify_user] = nil
     end
 
-    def login_url(no_cookie_redirect: false)
+    def login_url(top_level: false)
       url = ShopifyApp.configuration.login_url
 
       query_params = {}
       query_params[:shop] = sanitized_params[:shop] if params[:shop].present?
-      query_params[:no_cookie_redirect] = true if no_cookie_redirect
+      query_params[:top_level] = true if top_level
 
       url = "#{url}?#{query_params.to_query}" if query_params.present?
       url
