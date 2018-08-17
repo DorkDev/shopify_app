@@ -62,6 +62,7 @@ module ShopifyApp
 
       query_params = {}
       query_params[:shop] = sanitized_params[:shop] if params[:shop].present?
+      query_params[:shop] ||= referer_sanitized_shop_name if referer_sanitized_shop_name.present?
       query_params[:top_level] = true if top_level
 
       url = "#{url}?#{query_params.to_query}" if query_params.present?
@@ -85,6 +86,17 @@ module ShopifyApp
 
     def sanitized_shop_name
       @sanitized_shop_name ||= sanitize_shop_param(params)
+    end
+
+    def referer_sanitized_shop_name
+      return unless request.referer.present?
+
+      @referer_sanitized_shop_name ||= begin
+        referer_uri = URI(request.referer)
+        query_params = Rack::Utils.parse_query(referer_uri.query)
+
+        sanitize_shop_param(query_params.with_indifferent_access)
+      end
     end
 
     def sanitize_shop_param(params)

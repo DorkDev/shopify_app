@@ -124,6 +124,17 @@ class LoginProtectionTest < ActionController::TestCase
     end
   end
 
+  test "#shopify_session with no Shopify session, redirects to login_url with \
+        shop param of referer" do
+    with_application_test_routes do
+      @controller.expects(:shop_session).returns(nil)
+      request.headers['Referer'] = 'https://example.com/?shop=my-shop.myshopify.com'
+
+      get :index
+      assert_redirected_to '/login?shop=my-shop.myshopify.com'
+    end
+  end
+
   test '#shopify_session with no Shopify session, redirects to the login url \
         with non-String shop param' do
     with_application_test_routes do
