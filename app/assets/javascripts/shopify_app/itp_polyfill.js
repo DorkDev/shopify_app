@@ -1,8 +1,6 @@
 function setCookieAndRedirect() {
   document.cookie = "shopify.cookies_persist=true";
   window.location.href = window.shopOrigin + "/admin/apps/" + window.apiKey;
-
-  return false;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
