@@ -62,7 +62,10 @@ module ShopifyApp
 
       query_params = {}
       query_params[:shop] = sanitized_params[:shop] if params[:shop].present?
-      query_params[:shop] ||= referer_sanitized_shop_name if referer_sanitized_shop_name.present?
+
+      has_referer_shop_name = referer_sanitized_shop_name.present?
+      query_params[:shop] ||= referer_sanitized_shop_name if has_referer_shop_name
+
       query_params[:top_level] = true if top_level
 
       url = "#{url}?#{query_params.to_query}" if query_params.present?
